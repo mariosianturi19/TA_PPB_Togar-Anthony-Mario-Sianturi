@@ -1,16 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  View, 
-  Text, 
-  FlatList, 
-  Image, 
-  StyleSheet, 
-  ActivityIndicator,
-  TouchableOpacity,
-  SafeAreaView,
-  Alert,
-  RefreshControl
-} from 'react-native';
+import { FlatList, TouchableOpacity, SafeAreaView, RefreshControl, Animated, Alert, StyleSheet } from 'react-native';
+import { Card, Image, Text, Divider } from 'react-native-elements';
+import styled from 'styled-components/native';
 import { getNBATeams } from '../service/TeamsService';
 
 const TeamsScreen = ({ navigation }) => {
@@ -22,7 +13,10 @@ const TeamsScreen = ({ navigation }) => {
     try {
       setLoading(true);
       const response = await getNBATeams();
-      setNBATeams(response.response || []);
+      const teamsWithLogos = (response.response || []).filter(team => 
+        team.logo && team.logo.trim() !== ''
+      );
+      setNBATeams(teamsWithLogos);
     } catch (error) {
       Alert.alert('Error', 'Gagal memuat data tim NBA');
     } finally {
@@ -40,41 +34,131 @@ const TeamsScreen = ({ navigation }) => {
   }, []);
 
   const renderItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.card}
+    <TouchableOpacity
       onPress={() => navigation.navigate('Players', { teamId: item.id, season: '2023' })}
+      activeOpacity={0.7}
     >
-      <Image source={{ uri: item.logo }} style={styles.image} />
-      <View style={styles.cardContent}>
-        <Text style={styles.name}>{item.name}</Text>
+      <StyledCard containerStyle={styles.card}>
+        <StyledImageWrapper>
+          <StyledTeamImage 
+            source={{ uri: item.logo }} 
+          />
+        </StyledImageWrapper>
+        <Card.Title style={styles.name}>{item.name}</Card.Title>
+        <StyledDivider />
         <Text style={styles.location}>{item.city}</Text>
-      </View>
+      </StyledCard>
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <FlatList
-          data={nbaTeams}
-          renderItem={renderItem}
-          keyExtractor={(item) => item.id.toString()}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        />
-      )}
-    </SafeAreaView>
+    <Container>
+      <Text style={styles.header}>NBA Teams</Text>
+      <FlatList
+        data={nbaTeams}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor="#60A5FA"
+            colors={["#60A5FA"]}
+          />
+        }
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          !loading && (
+            <EmptyContainer>
+              <EmptyText>Tidak ada data tim NBA</EmptyText>
+            </EmptyContainer>
+          )
+        }
+      />
+    </Container>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  card: { flexDirection: 'row', padding: 8, margin: 4, backgroundColor: '#fff', borderRadius: 8 },
-  image: { width: 50, height: 50, borderRadius: 25 },
-  cardContent: { paddingLeft: 8, justifyContent: 'center' },
-  name: { fontSize: 16, fontWeight: 'bold' },
-  location: { fontSize: 14, color: '#666' },
+  header: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#F3F4F6',
+    padding: 16,
+    textAlign: 'center',
+    letterSpacing: 0.5,
+  },
+  card: {
+    borderRadius: 16,
+    elevation: 8,
+    marginHorizontal: 12,
+    marginVertical: 8,
+    backgroundColor: '#1F2937',
+    borderWidth: 0,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+  },
+  name: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginVertical: 10,
+    color: '#F3F4F6',
+    letterSpacing: 0.5,
+  },
+  location: {
+    fontSize: 16,
+    color: '#9CA3AF',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  listContent: {
+    paddingVertical: 12,
+  },
 });
+
+const Container = styled(SafeAreaView)`
+  flex: 1;
+  background-color: #111827;
+`;
+
+const StyledCard = styled(Card).attrs({
+  containerStyle: styles.card,
+})`
+  border-width: 0;
+`;
+
+const StyledImageWrapper = styled.View`
+  background-color: #374151;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  height: 120px;
+  overflow: hidden;
+`;
+
+const StyledTeamImage = styled(Card.Image)`
+  height: 120px;
+  opacity: 0.7;
+`;
+
+const StyledDivider = styled(Divider)`
+  background-color: #374151;
+  height: 1px;
+  margin-vertical: 8px;
+`;
+
+const EmptyContainer = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  padding-top: 40px;
+`;
+
+const EmptyText = styled.Text`
+  font-size: 18px;
+  color: #9CA3AF;
+  text-align: center;
+`;
 
 export default TeamsScreen;

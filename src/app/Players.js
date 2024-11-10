@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { 
   View, 
-  Text, 
   FlatList, 
-  Image, 
-  StyleSheet, 
-  ActivityIndicator,
   SafeAreaView,
   RefreshControl,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
+import { Card, Image } from 'react-native-elements';
+import styled from 'styled-components/native';
 import { getNBATeamsPlayers } from '../service/PlayersService';
 
 const PlayersScreen = ({ route }) => {
@@ -40,38 +39,126 @@ const PlayersScreen = ({ route }) => {
   }, []);
 
   const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Image source={{ uri: item.image }} style={styles.image} />
-      <View style={styles.cardContent}>
-        <Text style={styles.name}>{item.firstname} {item.lastname}</Text>
-        <Text style={styles.position}>{item.position}</Text>
-      </View>
-    </View>
+    <PlayerCard>
+      <PlayerImageWrapper>
+        <PlayerImage source={{ uri: item.image }} />
+      </PlayerImageWrapper>
+      <PlayerInfo>
+        <PlayerName>{item.firstname} {item.lastname}</PlayerName>
+        <PlayerPosition>{item.position}</PlayerPosition>
+      </PlayerInfo>
+    </PlayerCard>
   );
 
+  if (loading) {
+    return (
+      <LoadingContainer>
+        <ActivityIndicator size="large" color="#60A5FA" />
+      </LoadingContainer>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <FlatList
-          data={players}
-          renderItem={renderItem}
-          keyExtractor={(item, index) => index.toString()}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
-        />
-      )}
-    </SafeAreaView>
+    <Container>
+      <FlatList
+        data={players}
+        renderItem={renderItem}
+        keyExtractor={(item, index) => index.toString()}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh}
+            tintColor="#60A5FA"
+            colors={["#60A5FA"]}
+          />
+        }
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          !loading && (
+            <EmptyContainer>
+              <EmptyText>Tidak ada data pemain</EmptyText>
+            </EmptyContainer>
+          )
+        }
+      />
+    </Container>
   );
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f5' },
-  card: { flexDirection: 'row', padding: 8, margin: 4, backgroundColor: '#fff', borderRadius: 8 },
-  image: { width: 50, height: 50, borderRadius: 25 },
-  cardContent: { paddingLeft: 8, justifyContent: 'center' },
-  name: { fontSize: 16, fontWeight: 'bold' },
-  position: { fontSize: 14, color: '#666' },
-});
+const styles = {
+  listContent: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+};
+
+const Container = styled(SafeAreaView)`
+  flex: 1;
+  background-color: #111827;
+`;
+
+const LoadingContainer = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  background-color: #111827;
+`;
+
+const PlayerCard = styled.View`
+  flex-direction: row;
+  background-color: #1F2937;
+  border-radius: 16px;
+  padding: 12px;
+  margin-bottom: 12px;
+  elevation: 4;
+  shadow-color: #000;
+  shadow-offset: 0px 2px;
+  shadow-opacity: 0.25;
+  shadow-radius: 3.84px;
+`;
+
+const PlayerImageWrapper = styled.View`
+  background-color: #374151;
+  border-radius: 40px;
+  padding: 2px;
+  elevation: 3;
+`;
+
+const PlayerImage = styled.Image`
+  width: 64px;
+  height: 64px;
+  border-radius: 32px;
+`;
+
+const PlayerInfo = styled.View`
+  flex: 1;
+  margin-left: 16px;
+  justify-content: center;
+`;
+
+const PlayerName = styled.Text`
+  font-size: 18px;
+  font-weight: bold;
+  color: #F3F4F6;
+  margin-bottom: 4px;
+`;
+
+const PlayerPosition = styled.Text`
+  font-size: 14px;
+  color: #9CA3AF;
+`;
+
+const EmptyContainer = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  padding-top: 40px;
+`;
+
+const EmptyText = styled.Text`
+  font-size: 18px;
+  color: #9CA3AF;
+  text-align: center;
+`;
 
 export default PlayersScreen;
