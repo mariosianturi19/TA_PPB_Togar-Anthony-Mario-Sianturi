@@ -45,7 +45,7 @@ const ProfileScreen = ({ navigation }) => {
             </InfoItem>
             <InfoItem>
               <InfoLabel>Birthdate:</InfoLabel>
-              <InfoValue>July 19, 2024</InfoValue>
+              <InfoValue>July 19, 2004</InfoValue>
             </InfoItem>
             <InfoItem>
               <InfoLabel>Country:</InfoLabel>
